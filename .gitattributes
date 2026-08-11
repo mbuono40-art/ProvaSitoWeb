@@ -1,0 +1,9 @@
+# Normalizza i fine riga: nel repository sempre LF, in locale secondo il sistema.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary

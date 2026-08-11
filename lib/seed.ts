@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type { InStatement } from "@libsql/client";
 import { dbAll, dbGet, dbRun, getDb } from "./db";
 import { hashPassword } from "./password";
@@ -538,10 +539,22 @@ export async function seedIfEmpty(): Promise<void> {
 }
 
 export async function ensureAdmin(): Promise<void> {
-  const email = (process.env.ADMIN_EMAIL || "admin@cinemaaureo.it").toLowerCase();
-  const password = process.env.ADMIN_PASSWORD || "aureo2026";
+  const email = (process.env.ADMIN_EMAIL || "direzione@cinemaaureo.local").toLowerCase();
   const existing = await dbGet(`SELECT id FROM users WHERE email = @email`, { email });
   if (existing) return;
+
+  // Nessuna password di ripiego scritta nel codice: se ADMIN_PASSWORD non è
+  // configurata ne viene generata una casuale, mostrata una sola volta nel
+  // log del server al momento della creazione dell'account.
+  const generata = !process.env.ADMIN_PASSWORD;
+  const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString("base64url");
+  if (generata) {
+    console.warn(
+      `\n[cinema] Creato l'account di direzione "${email}".` +
+        `\n[cinema] Password generata: ${password}` +
+        `\n[cinema] Annotala ora: non verrà più mostrata. Impostane una tua con ADMIN_PASSWORD.\n`,
+    );
+  }
   // "OR IGNORE": online il sito gira su più istanze indipendenti che possono
   // partire insieme e provare a creare l'admin nello stesso istante. Senza
   // questo, la seconda istanza fallirebbe sul vincolo UNIQUE dell'email e la
