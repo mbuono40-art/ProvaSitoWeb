@@ -1,69 +1,158 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from "next/link";
+import { HeroCarousel } from "@/components/HeroCarousel";
+import { MovieRow } from "@/components/MovieRow";
+import { PollCard } from "@/components/PollCard";
+import { Stars } from "@/components/Stars";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  latestReviews,
+  listFeatured,
+  listMoviesByStatus,
+  listPolls,
+  listTopRated,
+  siteStats,
+} from "@/lib/queries";
 
-export default function Home() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
+
+  const [featured, inSala, prossimi, archivio, catalogo, topRated, polls, recensioni, stats] =
+    await Promise.all([
+      listFeatured(5),
+      listMoviesByStatus("in_programmazione", 20),
+      listMoviesByStatus("prossimamente", 20),
+      listMoviesByStatus("archivio", 20),
+      listMoviesByStatus("catalogo", 20),
+      listTopRated(15),
+      listPolls(user?.id, "aperto"),
+      latestReviews(4),
+      siteStats(),
+    ]);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="contenitore pagina">
+      <HeroCarousel movies={featured.length ? featured : inSala.slice(0, 5)} />
+
+      <MovieRow
+        title="In sala"
+        accent="adesso"
+        movies={inSala}
+        href="/programmazione"
+        hrefLabel="Orari e sale"
+        showLabel={false}
+      />
+
+      <MovieRow
+        title="Prossimamente"
+        accent="in cartellone"
+        movies={prossimi}
+        href="/catalogo?stato=prossimamente"
+        showLabel={false}
+      />
+
+      <div className="due-colonne sezione">
+        <div>
+          <div className="sezione-testata">
+            <h2>
+              Decidi tu <span>la rassegna</span>
+            </h2>
+            <Link href="/sondaggi" className="sezione-link">
+              Tutti i sondaggi →
+            </Link>
+          </div>
+          {polls.length ? (
+            <PollCard poll={polls[0]} isLogged={!!user} />
+          ) : (
+            <div className="vuoto">
+              Nessun sondaggio aperto in questo momento. Torna presto.
+            </div>
+          )}
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div>
+          <div className="sezione-testata">
+            <h2>
+              La sala <span>in numeri</span>
+            </h2>
+          </div>
+          <div className="colonna">
+            <div className="tre-colonne" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              <div className="statistica">
+                <b>{stats.movies}</b>
+                <span>film in catalogo</span>
+              </div>
+              <div className="statistica">
+                <b>{stats.upcoming}</b>
+                <span>proiezioni in arrivo</span>
+              </div>
+              <div className="statistica">
+                <b>{stats.reviews}</b>
+                <span>recensioni</span>
+              </div>
+              <div className="statistica">
+                <b>{stats.users}</b>
+                <span>spettatori iscritti</span>
+              </div>
+            </div>
+            <div className="pannello">
+              <h3 style={{ marginBottom: 6 }}>Manca un film?</h3>
+              <p className="tenue piccolo" style={{ marginBottom: 14 }}>
+                Proponilo alla direzione: le richieste più votate entrano in
+                programmazione.
+              </p>
+              <Link href="/richieste" className="btn btn-blocco">
+                Richiedi un film
+              </Link>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
+
+      <MovieRow
+        title="I più votati"
+        accent="dal pubblico"
+        movies={topRated}
+        href="/catalogo?ordina=voto"
+      />
+
+      <MovieRow
+        title="Rassegne"
+        accent="e classici"
+        movies={[...archivio, ...catalogo]}
+        href="/archivio"
+        hrefLabel="Archivio proiezioni"
+        showLabel={false}
+      />
+
+      {recensioni.length > 0 && (
+        <section className="sezione">
+          <div className="sezione-testata">
+            <h2>
+              Ultime <span>recensioni</span>
+            </h2>
+          </div>
+          <div className="tre-colonne">
+            {recensioni.map((r) => (
+              <Link key={r.id} href={`/film/${r.movie_id}`} className="pannello">
+                <div className="riga" style={{ marginBottom: 8 }}>
+                  <span className="avatar">{r.author.charAt(0).toUpperCase()}</span>
+                  <div>
+                    <div className="recensione-autore">{r.author}</div>
+                    <Stars value={r.rating} size="0.8rem" />
+                  </div>
+                </div>
+                <div className="recensione-titolo">{r.movie_title}</div>
+                <p className="piccolo tenue" style={{ marginTop: 4 }}>
+                  {r.body.length > 160 ? `${r.body.slice(0, 160)}…` : r.body}
+                </p>
+                <p className="piccolo oro" style={{ marginTop: 10 }}>
+                  su {r.movie_title} →
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

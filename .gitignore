@@ -32,6 +32,13 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# database locale del cinema (creato al primo avvio)
+/data
+
+# immagini caricate dall'admin (locandine e sfondi)
+/public/uploads
 
 # vercel
 .vercel
