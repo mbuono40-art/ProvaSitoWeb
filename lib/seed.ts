@@ -542,8 +542,13 @@ export async function ensureAdmin(): Promise<void> {
   const password = process.env.ADMIN_PASSWORD || "aureo2026";
   const existing = await dbGet(`SELECT id FROM users WHERE email = @email`, { email });
   if (existing) return;
+  // "OR IGNORE": online il sito gira su più istanze indipendenti che possono
+  // partire insieme e provare a creare l'admin nello stesso istante. Senza
+  // questo, la seconda istanza fallirebbe sul vincolo UNIQUE dell'email e la
+  // pagina mostrerebbe un errore del server.
   await dbRun(
-    `INSERT INTO users (name, email, password_hash, role) VALUES (@name, @email, @hash, 'admin')`,
+    `INSERT OR IGNORE INTO users (name, email, password_hash, role)
+     VALUES (@name, @email, @hash, 'admin')`,
     { name: "Direzione", email, hash: hashPassword(password) },
   );
 }

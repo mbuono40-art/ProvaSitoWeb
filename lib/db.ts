@@ -197,10 +197,28 @@ function toPlainRow(row: Row, columns: string[]): Record<string, unknown> {
   return obj;
 }
 
+/**
+ * Turso remoto rifiuta i parametri nominati che non compaiono nella query
+ * ("Number of arguments mismatch"), mentre il file SQLite locale li ignora in
+ * silenzio. Diverse query hanno un WHERE costruito a pezzi, quindi certi
+ * parametri esistono solo in alcune combinazioni di filtri: qui teniamo solo
+ * quelli davvero citati nell'SQL, così le due modalità si comportano uguale.
+ */
+function pruneArgs(sql: string, args: Args): Args {
+  if (Array.isArray(args)) return args;
+  const usati: Record<string, unknown> = {};
+  for (const [nome, valore] of Object.entries(args)) {
+    const sicuro = nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // SQLite ammette @nome, :nome e $nome come segnaposto.
+    if (new RegExp(`[@:$]${sicuro}\\b`).test(sql)) usati[nome] = valore;
+  }
+  return usati as Args;
+}
+
 /** Prima riga del risultato, o undefined. Equivalente a db.prepare(sql).get(args). */
 export async function dbGet<T = unknown>(sql: string, args: Args = {}): Promise<T | undefined> {
   const db = await getDb();
-  const result = await db.execute({ sql, args });
+  const result = await db.execute({ sql, args: pruneArgs(sql, args) });
   const row = result.rows[0];
   return row ? (toPlainRow(row, result.columns) as unknown as T) : undefined;
 }
@@ -208,7 +226,7 @@ export async function dbGet<T = unknown>(sql: string, args: Args = {}): Promise<
 /** Tutte le righe. Equivalente a db.prepare(sql).all(args). */
 export async function dbAll<T = unknown>(sql: string, args: Args = {}): Promise<T[]> {
   const db = await getDb();
-  const result = await db.execute({ sql, args });
+  const result = await db.execute({ sql, args: pruneArgs(sql, args) });
   return result.rows.map((row) => toPlainRow(row, result.columns)) as unknown as T[];
 }
 
@@ -218,7 +236,7 @@ export async function dbRun(
   args: Args = {},
 ): Promise<{ lastInsertRowid: number; changes: number }> {
   const db = await getDb();
-  const result = await db.execute({ sql, args });
+  const result = await db.execute({ sql, args: pruneArgs(sql, args) });
   return {
     lastInsertRowid: Number(result.lastInsertRowid ?? 0),
     changes: result.rowsAffected,
