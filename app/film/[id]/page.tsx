@@ -4,12 +4,14 @@ import { MovieRow } from "@/components/MovieRow";
 import { Poster } from "@/components/Poster";
 import { ReviewForm } from "@/components/ReviewForm";
 import { Stars } from "@/components/Stars";
+import { QuickShowtime } from "@/components/admin/QuickShowtime";
 import { getCurrentUser } from "@/lib/auth";
 import {
   formatDuration,
   formatFullDate,
   formatRating,
   formatTime,
+  todayKey,
 } from "@/lib/format";
 import {
   getMovie,
@@ -216,6 +218,14 @@ export default async function FilmPage({
         </div>
 
         <div className="colonna">
+          {user?.role === "admin" && (
+            <QuickShowtime
+              movieId={movie.id}
+              movieTitle={movie.title}
+              today={todayKey()}
+            />
+          )}
+
           <ReviewForm
             movieId={movie.id}
             movieTitle={movie.title}

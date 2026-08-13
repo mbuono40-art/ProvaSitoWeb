@@ -30,16 +30,19 @@ export function HeroCarousel({
 
   return (
     <section className="hero" aria-roledescription="carosello" aria-label="Film in evidenza">
+      {/* La "key" cambia a ogni slide: React ricrea l'elemento e l'animazione
+          CSS riparte da capo, altrimenti scatterebbe una volta sola. */}
       {m.backdrop_url && (
         <div
-          className="hero-sfondo"
+          key={`sfondo-${m.id}`}
+          className="hero-sfondo hero-anima-sfondo"
           style={{ backgroundImage: `url(${m.backdrop_url})` }}
           aria-hidden="true"
         />
       )}
       <div className="hero-velo" aria-hidden="true" />
 
-      <div className="hero-corpo">
+      <div key={`corpo-${m.id}`} className="hero-corpo hero-anima-corpo">
         <p className="occhiello">
           {etichetta ??
             (m.status === "prossimamente" ? "Prossimamente in sala" : "In programmazione")}
@@ -74,8 +77,9 @@ export function HeroCarousel({
       </div>
 
       <Link
+        key={`locandina-${m.id}`}
         href={`/film/${m.id}`}
-        className="hero-locandina"
+        className="hero-locandina hero-anima-locandina"
         aria-label={`Scheda di ${m.title}`}
       >
         <Poster movie={m} sizes="230px" />
@@ -90,7 +94,16 @@ export function HeroCarousel({
               className={`hero-punto${idx === i ? " attivo" : ""}`}
               onClick={() => setI(idx)}
               aria-label={`Vai a ${mv.title}`}
-            />
+            >
+              {idx === i && (
+                <span
+                  key={`avanzamento-${m.id}`}
+                  className="hero-punto-avanzamento"
+                  style={{ animationDuration: `${DURATA}ms` }}
+                  aria-hidden="true"
+                />
+              )}
+            </button>
           ))}
         </div>
       )}

@@ -919,6 +919,91 @@ option {
     linear-gradient(90deg, rgba(5, 4, 8, 0.92) 0%, transparent 65%);
 }
 
+/* --- transizioni al cambio di slide ----------------------------------- */
+
+/* lo sfondo entra in dissolvenza con una lentissima carrellata */
+.hero-anima-sfondo {
+  animation: hero-sfondo-entra 1100ms ease-out both;
+}
+
+@keyframes hero-sfondo-entra {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+}
+
+/* il testo sale di poco mentre compare */
+.hero-anima-corpo {
+  animation: hero-corpo-entra 620ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes hero-corpo-entra {
+  from {
+    opacity: 0;
+    transform: translate3d(-26px, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* le righe interne entrano una dopo l'altra, non tutte insieme */
+.hero-anima-corpo > * {
+  animation: hero-riga-entra 520ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.hero-anima-corpo > *:nth-child(1) { animation-delay: 60ms; }
+.hero-anima-corpo > *:nth-child(2) { animation-delay: 120ms; }
+.hero-anima-corpo > *:nth-child(3) { animation-delay: 180ms; }
+.hero-anima-corpo > *:nth-child(4) { animation-delay: 240ms; }
+.hero-anima-corpo > *:nth-child(5) { animation-delay: 300ms; }
+.hero-anima-corpo > *:nth-child(6) { animation-delay: 360ms; }
+
+@keyframes hero-riga-entra {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* la locandina arriva dal lato opposto, con un accenno di rotazione */
+.hero-anima-locandina {
+  animation: hero-locandina-entra 760ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes hero-locandina-entra {
+  from {
+    opacity: 0;
+    transform: translate3d(34px, 0, 0) scale(0.94) rotate(1.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-anima-sfondo,
+  .hero-anima-corpo,
+  .hero-anima-corpo > *,
+  .hero-anima-locandina {
+    animation: none;
+  }
+  .hero-anima-sfondo {
+    opacity: 0.5;
+  }
+}
+
 .hero-corpo {
   position: relative;
   padding: clamp(20px, 4vw, 46px);
@@ -1015,6 +1100,59 @@ option {
 .hero-punto.attivo {
   background: var(--oro);
   box-shadow: 0 0 10px var(--oro);
+}
+
+/* Il pallino attivo si allunga in una barretta che si riempie: mostra
+   quanto manca al passaggio alla slide successiva. */
+.hero-punto.attivo {
+  position: relative;
+  width: 30px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.25);
+  overflow: hidden;
+}
+
+.hero-punto {
+  transition:
+    width 320ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    background 200ms;
+}
+
+.hero-punto-avanzamento {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: var(--oro);
+  animation-name: hero-avanzamento;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes hero-avanzamento {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-punto-avanzamento {
+    animation: none;
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------- riquadro riservato admin */
+.riquadro-direzione {
+  border-color: var(--bordo-forte);
+  background:
+    linear-gradient(135deg, rgba(146, 22, 42, 0.18), rgba(22, 20, 27, 0.85) 55%);
+}
+
+.riquadro-direzione .occhiello {
+  color: var(--oro);
 }
 
 /* -------------------------------------------------------------- dettaglio */
