@@ -9,7 +9,14 @@ import type { MovieWithStats } from "@/lib/types";
 
 const DURATA = 8000;
 
-export function HeroCarousel({ movies }: { movies: MovieWithStats[] }) {
+export function HeroCarousel({
+  movies,
+  etichetta,
+}: {
+  movies: MovieWithStats[];
+  /** Sovrascrive l'occhiello: usato quando i film arrivano dal sondaggio. */
+  etichetta?: string;
+}) {
   const [i, setI] = useState(0);
 
   useEffect(() => {
@@ -34,7 +41,8 @@ export function HeroCarousel({ movies }: { movies: MovieWithStats[] }) {
 
       <div className="hero-corpo">
         <p className="occhiello">
-          {m.status === "prossimamente" ? "Prossimamente in sala" : "In programmazione"}
+          {etichetta ??
+            (m.status === "prossimamente" ? "Prossimamente in sala" : "In programmazione")}
         </p>
         <h1>{m.title}</h1>
         <div className="hero-meta">

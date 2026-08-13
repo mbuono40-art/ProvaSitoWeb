@@ -147,7 +147,10 @@ export function MovieForm({
             defaultChecked={!!movie?.featured}
             style={{ width: 18, height: 18 }}
           />
-          <span className="piccolo">Mostra in evidenza nella home (carosello grande)</span>
+          <span className="piccolo">
+            Mostra in evidenza nella home: usato nel carosello grande solo quando
+            non c&apos;è nessun sondaggio aperto
+          </span>
         </label>
 
         {state.error && <p className="avviso avviso-errore">{state.error}</p>}

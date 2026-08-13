@@ -156,6 +156,31 @@ export async function upcomingShowtimes(days = 21): Promise<ShowtimeWithMovie[]>
   );
 }
 
+/**
+ * Prima giornata con proiezioni ancora da venire, con tutti i suoi spettacoli.
+ * Se oggi restano spettacoli, la giornata è oggi; altrimenti si passa al primo
+ * giorno utile successivo.
+ */
+export async function nextScreeningDay(): Promise<{
+  giorno: string;
+  spettacoli: ShowtimeWithMovie[];
+} | null> {
+  const primo = await dbGet<{ inizio: string | null }>(
+    `SELECT MIN(starts_at) AS inizio FROM showtimes WHERE starts_at >= @now`,
+    { now: nowKey() },
+  );
+  if (!primo?.inizio) return null;
+
+  const giorno = primo.inizio.slice(0, 10);
+  const spettacoli = await dbAll<ShowtimeWithMovie>(
+    `${SHOWTIME_SELECT}
+      WHERE s.starts_at >= @now AND s.starts_at LIKE @giorno
+      ORDER BY s.starts_at`,
+    { now: nowKey(), giorno: `${giorno}T%` },
+  );
+  return { giorno, spettacoli };
+}
+
 export async function showtimesForMovie(movieId: number): Promise<ShowtimeWithMovie[]> {
   return dbAll<ShowtimeWithMovie>(
     `${SHOWTIME_SELECT}
@@ -377,6 +402,30 @@ export async function siteStats() {
 
 export async function allMoviesSimple(): Promise<Movie[]> {
   return dbAll<Movie>(`SELECT * FROM movies ORDER BY title COLLATE NOCASE`);
+}
+
+/**
+ * Film corrispondenti a un elenco di id, restituiti nello stesso ordine in cui
+ * gli id sono stati passati (l'SQL non garantisce l'ordine di una IN).
+ * I segnaposto sono nominati perché il resto della query ne usa già (@now):
+ * mescolare "?" e "@nome" non è ammesso.
+ */
+export async function moviesByIds(ids: number[]): Promise<MovieWithStats[]> {
+  if (!ids.length) return [];
+
+  const segnaposto = ids.map((_, i) => `@id${i}`).join(", ");
+  const args: Record<string, unknown> = { now: nowKey() };
+  ids.forEach((id, i) => {
+    args[`id${i}`] = id;
+  });
+
+  const trovati = await dbAll<MovieWithStats>(
+    `${MOVIE_STATS_SELECT} WHERE m.id IN (${segnaposto})`,
+    args as Args,
+  );
+
+  const perId = new Map(trovati.map((m) => [m.id, m]));
+  return ids.map((id) => perId.get(id)).filter((m): m is MovieWithStats => !!m);
 }
 
 /* -------------------------------------------------------------- utenti (admin) */

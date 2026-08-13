@@ -6,18 +6,32 @@ import { allMoviesSimple, listPolls } from "@/lib/queries";
 export default async function AdminSondaggiPage() {
   const [movies, polls] = await Promise.all([allMoviesSimple(), listPolls(null)]);
 
+  // La home usa il sondaggio aperto più recente: è lo stesso criterio di
+  // ordinamento di listPolls, quindi è il primo "aperto" di questo elenco.
+  const inHome = polls.find((p) => p.status === "aperto") ?? null;
+
   return (
     <div className="due-colonne">
       <div className="colonna">
         <h2>Sondaggi ({polls.length})</h2>
+        <p className="tenue piccolo">
+          I film del sondaggio aperto più recente compaiono nel carosello grande
+          in cima alla home. Chiudendolo, la home torna a mostrare i film marcati
+          come «in evidenza» nella scheda del film.
+        </p>
         {polls.length === 0 && <div className="vuoto">Nessun sondaggio creato.</div>}
 
         {polls.map((p) => (
           <div key={p.id} className="pannello">
             <div className="riga riga-tra" style={{ marginBottom: 8 }}>
               <h3>{p.title}</h3>
-              <span className={`badge${p.status === "aperto" ? "" : " badge-neutro"}`}>
-                {p.status === "aperto" ? "Aperto" : "Chiuso"}
+              <span className="riga" style={{ gap: 6 }}>
+                {inHome?.id === p.id && (
+                  <span className="badge">In home ({p.options.length} film)</span>
+                )}
+                <span className={`badge${p.status === "aperto" ? "" : " badge-neutro"}`}>
+                  {p.status === "aperto" ? "Aperto" : "Chiuso"}
+                </span>
               </span>
             </div>
             {p.description && <p className="piccolo tenue">{p.description}</p>}

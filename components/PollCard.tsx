@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { votePollAction } from "@/app/actions/polls";
 import { formatFullDate } from "@/lib/format";
 import type { PollWithOptions } from "@/lib/types";
@@ -16,6 +16,31 @@ export function PollCard({
   const [state, action] = useActionState(votePollAction, {});
   const chiuso = poll.status !== "aperto";
   const totale = poll.total_votes;
+
+  // Opzione appena premuta: serve solo per l'effetto visivo immediato,
+  // prima che il server risponda e la pagina si aggiorni.
+  const [inAttesa, setInAttesa] = useState<number | null>(null);
+  // Opzione confermata dal server: fa scattare il lampo dorato una sola volta.
+  const [confermata, setConfermata] = useState<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Volutamente senza "inAttesa" tra le dipendenze: deve reagire solo alla
+  // risposta del server (nuovo stato dell'azione o nuovo voto registrato),
+  // non al clic che ha appena impostato l'attesa.
+  useEffect(() => {
+    if (inAttesa === null) return;
+    setConfermata(inAttesa);
+    setInAttesa(null);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setConfermata(null), 900);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poll.my_option_id, state]);
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
 
   return (
     <div className="pannello">
@@ -45,21 +70,31 @@ export function PollCard({
         {poll.options.map((o) => {
           const perc = totale ? Math.round((o.votes / totale) * 100) : 0;
           const mia = poll.my_option_id === o.id;
+          const classi = [
+            "opzione-sondaggio",
+            mia ? "opzione-scelta-mia" : "",
+            inAttesa === o.id ? "in-attesa" : "",
+            confermata === o.id ? "appena-votata" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
           return (
             <button
               key={o.id}
               type="submit"
               name="option_id"
               value={o.id}
-              className="opzione-sondaggio"
+              className={classi}
               disabled={chiuso || !isLogged}
+              onClick={() => setInAttesa(o.id)}
             >
               <span
                 className="opzione-barra"
                 style={{ width: `${perc}%` }}
                 aria-hidden="true"
               />
-              <span>{mia ? "◉" : "○"}</span>
+              <span className="opzione-segno">{mia ? "◉" : "○"}</span>
               <span>{o.label}</span>
               <span className={`opzione-scelta${mia ? " opzione-mia" : ""}`}>
                 {perc}% <span className="tenue piccolo">({o.votes})</span>

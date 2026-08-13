@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieRow } from "@/components/MovieRow";
+import { NextScreening } from "@/components/NextScreening";
 import { PollCard } from "@/components/PollCard";
 import { Stars } from "@/components/Stars";
 import { getCurrentUser } from "@/lib/auth";
@@ -10,44 +11,65 @@ import {
   listMoviesByStatus,
   listPolls,
   listTopRated,
+  moviesByIds,
+  nextScreeningDay,
   siteStats,
 } from "@/lib/queries";
 
 export default async function HomePage() {
   const user = await getCurrentUser();
 
-  const [featured, inSala, prossimi, archivio, catalogo, topRated, polls, recensioni, stats] =
-    await Promise.all([
-      listFeatured(5),
-      listMoviesByStatus("in_programmazione", 20),
-      listMoviesByStatus("prossimamente", 20),
-      listMoviesByStatus("archivio", 20),
-      listMoviesByStatus("catalogo", 20),
-      listTopRated(15),
-      listPolls(user?.id, "aperto"),
-      latestReviews(4),
-      siteStats(),
-    ]);
+  const [
+    featured,
+    inSala,
+    prossimi,
+    archivio,
+    catalogo,
+    topRated,
+    polls,
+    recensioni,
+    stats,
+    giornata,
+  ] = await Promise.all([
+    listFeatured(5),
+    listMoviesByStatus("in_programmazione", 20),
+    listMoviesByStatus("prossimamente", 20),
+    listMoviesByStatus("archivio", 20),
+    listMoviesByStatus("catalogo", 20),
+    listTopRated(15),
+    listPolls(user?.id, "aperto"),
+    latestReviews(4),
+    siteStats(),
+    nextScreeningDay(),
+  ]);
+
+  // Il carosello in cima mostra i film in votazione nel sondaggio qui sotto.
+  // Se non c'è nessun sondaggio aperto si ripiega sui film messi in evidenza
+  // dalla direzione, e in mancanza di quelli su ciò che è in sala.
+  const sondaggio = polls[0] ?? null;
+  const filmSondaggio = sondaggio
+    ? await moviesByIds(
+        sondaggio.options
+          .map((o) => o.movie_id)
+          .filter((id): id is number => id !== null),
+      )
+    : [];
+
+  const filmHero = filmSondaggio.length
+    ? filmSondaggio
+    : featured.length
+      ? featured
+      : inSala.slice(0, 5);
 
   return (
     <div className="contenitore pagina">
-      <HeroCarousel movies={featured.length ? featured : inSala.slice(0, 5)} />
+      {giornata && (
+        <NextScreening giorno={giornata.giorno} spettacoli={giornata.spettacoli} />
+      )}
 
-      <MovieRow
-        title="In sala"
-        accent="adesso"
-        movies={inSala}
-        href="/programmazione"
-        hrefLabel="Orari e sale"
-        showLabel={false}
-      />
-
-      <MovieRow
-        title="Prossimamente"
-        accent="in cartellone"
-        movies={prossimi}
-        href="/catalogo?stato=prossimamente"
-        showLabel={false}
+      <HeroCarousel
+        movies={filmHero}
+        etichetta={filmSondaggio.length ? "In votazione per la rassegna" : undefined}
       />
 
       <div className="due-colonne sezione">
@@ -60,8 +82,8 @@ export default async function HomePage() {
               Tutti i sondaggi →
             </Link>
           </div>
-          {polls.length ? (
-            <PollCard poll={polls[0]} isLogged={!!user} />
+          {sondaggio ? (
+            <PollCard poll={sondaggio} isLogged={!!user} />
           ) : (
             <div className="vuoto">
               Nessun sondaggio aperto in questo momento. Torna presto.
@@ -107,6 +129,23 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      <MovieRow
+        title="In sala"
+        accent="adesso"
+        movies={inSala}
+        href="/programmazione"
+        hrefLabel="Orari e sale"
+        showLabel={false}
+      />
+
+      <MovieRow
+        title="Prossimamente"
+        accent="in cartellone"
+        movies={prossimi}
+        href="/catalogo?stato=prossimamente"
+        showLabel={false}
+      />
 
       <MovieRow
         title="I più votati"

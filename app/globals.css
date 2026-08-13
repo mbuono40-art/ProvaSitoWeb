@@ -1444,6 +1444,192 @@ tbody tr:hover {
   color: var(--oro);
 }
 
+/* opzione già scelta dall'utente: resta riconoscibile a colpo d'occhio */
+.opzione-scelta-mia {
+  border-color: var(--bordo-forte);
+  background: rgba(212, 175, 55, 0.07);
+}
+
+.opzione-segno {
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.opzione-scelta-mia .opzione-segno {
+  color: var(--oro);
+  transform: scale(1.25);
+}
+
+/* --- effetto alla pressione ------------------------------------------- */
+
+/* mentre il voto viaggia verso il server */
+.opzione-sondaggio.in-attesa {
+  border-color: var(--oro);
+  transform: scale(0.985);
+}
+
+.opzione-sondaggio.in-attesa::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(242, 220, 155, 0.28) 50%,
+    transparent 80%
+  );
+  background-size: 220% 100%;
+  animation: scorri-luce 900ms linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scorri-luce {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -80% 0;
+  }
+}
+
+/* quando il server conferma: lampo dorato e piccolo rimbalzo */
+.opzione-sondaggio.appena-votata {
+  animation: voto-registrato 850ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+@keyframes voto-registrato {
+  0% {
+    transform: scale(0.985);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6);
+  }
+  35% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+  }
+  60% {
+    transform: scale(0.998);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+  }
+}
+
+.opzione-sondaggio {
+  transition:
+    border-color 200ms,
+    background 200ms,
+    transform 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opzione-sondaggio.in-attesa::after,
+  .opzione-sondaggio.appena-votata {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------- prossima giornata (home) */
+.giornata {
+  position: relative;
+  margin-bottom: clamp(18px, 3vw, 28px);
+  padding: clamp(16px, 2.6vw, 24px) clamp(16px, 3vw, 28px);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  background:
+    linear-gradient(120deg, rgba(109, 16, 29, 0.32), rgba(14, 13, 18, 0.9) 60%);
+  box-shadow: var(--ombra);
+}
+
+.giornata-testata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.16);
+}
+
+.giornata-data {
+  font-size: clamp(1.15rem, 2.6vw, 1.7rem);
+  color: var(--crema);
+}
+
+/* Solo l'iniziale in maiuscolo: in italiano i nomi dei mesi restano minuscoli. */
+.giornata-data::first-letter {
+  text-transform: uppercase;
+}
+
+.giornata-apertura {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.giornata-ora {
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+  color: var(--oro);
+  font-variant-numeric: tabular-nums;
+}
+
+.giornata-elenco {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px 26px;
+  margin-bottom: 14px;
+}
+
+.giornata-film {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(212, 175, 55, 0.12);
+}
+
+.giornata-titolo {
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--crema);
+  transition: color 180ms;
+}
+
+.giornata-titolo:hover {
+  color: var(--oro-chiaro);
+}
+
+.giornata-orari {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.giornata-chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--bordo-forte);
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--oro-chiaro);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 620px) {
+  .giornata-testata {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .giornata-apertura {
+    align-items: flex-start;
+  }
+}
+
 /* ---------------------------------------------------------------- utility */
 .riga {
   display: flex;

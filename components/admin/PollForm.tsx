@@ -40,6 +40,11 @@ export function PollForm({ movies }: { movies: Movie[] }) {
 
       <div className="campo">
         <span className="etichetta">Film in votazione (almeno due)</span>
+        <p className="piccolo tenue" style={{ marginBottom: 10 }}>
+          I film selezionati qui diventano anche il carosello grande in cima alla
+          home: se ne scegli tre, in home ne scorreranno tre. Vale il sondaggio
+          aperto più recente.
+        </p>
         <input
           type="search"
           value={filtro}
