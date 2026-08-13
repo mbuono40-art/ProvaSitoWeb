@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MovieRow } from "@/components/MovieRow";
 import { Poster } from "@/components/Poster";
+import { ProposeMovie } from "@/components/ProposeMovie";
 import { ReviewForm } from "@/components/ReviewForm";
 import { Stars } from "@/components/Stars";
 import { QuickShowtime } from "@/components/admin/QuickShowtime";
@@ -153,7 +154,9 @@ export default async function FilmPage({
       <div className="due-colonne sezione">
         <div className="colonna">
           <section className="pannello">
-            <h2 style={{ marginBottom: 14 }}>Orari e sale</h2>
+            <h2 style={{ marginBottom: 14 }}>
+              {prossimi.length ? "Orari e sale" : "Vorresti rivederlo?"}
+            </h2>
             {prossimi.length ? (
               <div className="colonna" style={{ gap: 18 }}>
                 {raggruppaPerGiorno(prossimi).map(([giorno, shows]) => (
@@ -175,14 +178,11 @@ export default async function FilmPage({
                 ))}
               </div>
             ) : (
-              <div className="vuoto">
-                Questo film non è in programmazione al momento.
-                <br />
-                <Link href="/richieste" className="oro">
-                  Richiedilo alla direzione
-                </Link>{" "}
-                per rivederlo in sala.
-              </div>
+              <ProposeMovie
+                movieId={movie.id}
+                movieTitle={movie.title}
+                isLogged={!!user}
+              />
             )}
           </section>
 
