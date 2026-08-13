@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { createShowtimeAction } from "@/app/actions/admin";
+import { AvvisiAzione } from "@/components/Avvisi";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Movie } from "@/lib/types";
 
@@ -76,8 +77,7 @@ export function ShowtimeForm({
         </div>
       </div>
 
-      {state.error && <p className="avviso avviso-errore">{state.error}</p>}
-      {state.ok && <p className="avviso avviso-ok">{state.ok}</p>}
+      <AvvisiAzione stato={state} />
 
       <SubmitButton pendingLabel="Creo…">Crea gli spettacoli</SubmitButton>
     </form>

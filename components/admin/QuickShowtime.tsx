@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { createShowtimeAction } from "@/app/actions/admin";
+import { AvvisiAzione } from "@/components/Avvisi";
 import { SubmitButton } from "@/components/SubmitButton";
 
 /**
@@ -89,8 +90,7 @@ export function QuickShowtime({
             </div>
           </div>
 
-          {state.error && <p className="avviso avviso-errore">{state.error}</p>}
-          {state.ok && <p className="avviso avviso-ok">{state.ok}</p>}
+          <AvvisiAzione stato={state} />
 
           <div className="riga">
             <SubmitButton className="btn btn-piccolo btn-oro" pendingLabel="Aggiungo…">

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { deleteMovieAction, saveMovieAction } from "@/app/actions/admin";
+import { AvvisiAzione } from "@/components/Avvisi";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { Movie } from "@/lib/types";
 
@@ -153,8 +154,7 @@ export function MovieForm({
           </span>
         </label>
 
-        {state.error && <p className="avviso avviso-errore">{state.error}</p>}
-        {state.ok && <p className="avviso avviso-ok">{state.ok}</p>}
+        <AvvisiAzione stato={state} />
 
         <SubmitButton pendingLabel="Salvo…">
           {movie ? "Salva modifiche" : "Aggiungi il film"}

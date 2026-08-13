@@ -595,6 +595,37 @@ option {
   color: var(--testo-tenue);
 }
 
+/* Gli avvisi di esito compaiono, restano dieci secondi e svaniscono: la
+   dissolvenza finale coincide con il momento in cui React li rimuove. */
+.avviso-temporaneo {
+  animation: avviso-vita 10s ease forwards;
+}
+
+@keyframes avviso-vita {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  2% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  93% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avviso-temporaneo {
+    animation: none;
+  }
+}
+
 /* --------------------------------------------------------------- schede */
 .pannello {
   background: var(--superficie);

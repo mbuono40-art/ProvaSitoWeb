@@ -6,6 +6,7 @@ import {
   tmdbSearchAction,
   type TmdbState,
 } from "@/app/actions/admin";
+import { AvvisiAzione } from "@/components/Avvisi";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { TmdbSearchResult } from "@/lib/tmdb";
 
@@ -67,16 +68,7 @@ function ImportCard({ film }: { film: TmdbSearchResult }) {
           </SubmitButton>
         </form>
 
-        {state.error && (
-          <p className="avviso avviso-errore" style={{ marginTop: 8 }}>
-            {state.error}
-          </p>
-        )}
-        {state.ok && (
-          <p className="avviso avviso-ok" style={{ marginTop: 8 }}>
-            {state.ok}
-          </p>
-        )}
+        <AvvisiAzione stato={state} style={{ marginTop: 8 }} />
       </div>
     </div>
   );
@@ -104,16 +96,7 @@ export function TmdbImport() {
           <SubmitButton pendingLabel="Cerco…">Cerca</SubmitButton>
         </div>
 
-        {state.error && (
-          <p className="avviso avviso-errore" style={{ marginTop: 12 }}>
-            {state.error}
-          </p>
-        )}
-        {state.ok && (
-          <p className="avviso avviso-info" style={{ marginTop: 12 }}>
-            {state.ok}
-          </p>
-        )}
+        <AvvisiAzione stato={state} style={{ marginTop: 12 }} tipoOk="info" />
       </form>
 
       {state.results?.map((f) => (

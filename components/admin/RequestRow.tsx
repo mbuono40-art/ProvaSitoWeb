@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { deleteRequestAction, updateRequestAction } from "@/app/actions/admin";
+import { AvvisiAzione } from "@/components/Avvisi";
 import { SubmitButton } from "@/components/SubmitButton";
 import type { MovieRequest } from "@/lib/types";
 
@@ -62,8 +63,7 @@ export function RequestRow({ request }: { request: MovieRequest }) {
           </div>
         </div>
 
-        {state.error && <p className="avviso avviso-errore">{state.error}</p>}
-        {state.ok && <p className="avviso avviso-ok">{state.ok}</p>}
+        <AvvisiAzione stato={state} />
 
         <div className="riga">
           <SubmitButton className="btn btn-piccolo btn-oro" pendingLabel="Salvo…">

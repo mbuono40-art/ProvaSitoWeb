@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { votePollAction } from "@/app/actions/polls";
+import { AvvisiAzione } from "./Avvisi";
 import { formatFullDate } from "@/lib/format";
 import type { PollWithOptions } from "@/lib/types";
 
@@ -104,16 +105,7 @@ export function PollCard({
         })}
       </form>
 
-      {state.error && (
-        <p className="avviso avviso-errore" style={{ marginTop: 12 }}>
-          {state.error}
-        </p>
-      )}
-      {state.ok && (
-        <p className="avviso avviso-ok" style={{ marginTop: 12 }}>
-          {state.ok}
-        </p>
-      )}
+      <AvvisiAzione stato={state} style={{ marginTop: 12 }} />
 
       {!isLogged && !chiuso && (
         <p className="piccolo tenue" style={{ marginTop: 12 }}>

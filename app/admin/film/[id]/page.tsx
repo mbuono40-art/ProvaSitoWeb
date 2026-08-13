@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AvvisoTemporaneo } from "@/components/Avvisi";
 import { MovieForm } from "@/components/admin/MovieForm";
 import { Poster } from "@/components/Poster";
 import { dbGet } from "@/lib/db";
@@ -37,10 +38,10 @@ export default async function ModificaFilmPage({
       </div>
 
       {sp.nuovo && (
-        <p className="avviso avviso-ok">
+        <AvvisoTemporaneo>
           Film creato. Ora puoi aggiungere gli spettacoli dalla sezione
           Programmazione.
-        </p>
+        </AvvisoTemporaneo>
       )}
 
       <div className="due-colonne">

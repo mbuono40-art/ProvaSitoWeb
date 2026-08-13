@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { deleteReviewAction, saveReviewAction } from "@/app/actions/reviews";
+import { AvvisiAzione } from "./Avvisi";
 import { SubmitButton } from "./SubmitButton";
 import type { ReviewWithAuthor } from "@/lib/types";
 
@@ -84,8 +85,7 @@ export function ReviewForm({
           />
         </div>
 
-        {state.error && <p className="avviso avviso-errore">{state.error}</p>}
-        {state.ok && <p className="avviso avviso-ok">{state.ok}</p>}
+        <AvvisiAzione stato={state} />
 
         <div className="riga">
           <SubmitButton pendingLabel="Salvo…">

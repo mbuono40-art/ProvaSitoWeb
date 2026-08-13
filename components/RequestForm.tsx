@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { createRequestAction } from "@/app/actions/requests";
+import { AvvisiAzione } from "./Avvisi";
 import { SubmitButton } from "./SubmitButton";
 
 export function RequestForm({ isLogged }: { isLogged: boolean }) {
@@ -49,8 +50,7 @@ export function RequestForm({ isLogged }: { isLogged: boolean }) {
           <textarea id="note" name="note" maxLength={800} style={{ minHeight: 90 }} />
         </div>
 
-        {state.error && <p className="avviso avviso-errore">{state.error}</p>}
-        {state.ok && <p className="avviso avviso-ok">{state.ok}</p>}
+        <AvvisiAzione stato={state} />
 
         <SubmitButton pendingLabel="Invio…">Invia la richiesta</SubmitButton>
       </form>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { proposeMovieAction } from "@/app/actions/requests";
+import { AvvisiAzione } from "./Avvisi";
 import { SubmitButton } from "./SubmitButton";
 
 /**
@@ -40,16 +41,7 @@ export function ProposeMovie({
             </SubmitButton>
           </form>
 
-          {state.error && (
-            <p className="avviso avviso-errore" style={{ marginTop: 14 }}>
-              {state.error}
-            </p>
-          )}
-          {state.ok && (
-            <p className="avviso avviso-ok" style={{ marginTop: 14 }}>
-              {state.ok}
-            </p>
-          )}
+          <AvvisiAzione stato={state} style={{ marginTop: 14 }} />
         </>
       ) : (
         <>
