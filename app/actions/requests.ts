@@ -71,16 +71,17 @@ export async function createRequestAction(
 }
 
 /**
- * Proposta con un clic dalla scheda di un film: titolo e anno li prende dal
- * catalogo, così l'utente non deve riscriverli. Vale la stessa regola
- * anti-doppione delle richieste scritte a mano.
+ * Interesse dichiarato dalla scheda di un film già in catalogo. Non crea una
+ * richiesta scritta: alimenta solo il conteggio che la direzione consulta per
+ * capire quali titoli del catalogo il pubblico rivedrebbe volentieri.
+ * Premendo di nuovo si ritira l'interesse.
  */
-export async function proposeMovieAction(
+export async function toggleInterestAction(
   _prev: RequestState,
   formData: FormData,
 ): Promise<RequestState> {
   const user = await getCurrentUser();
-  if (!user) return { error: "Accedi per proporre questo film alla direzione." };
+  if (!user) return { error: "Accedi per segnalare il tuo interesse." };
   if (isSuspended(user)) {
     return {
       error: `Il tuo account è sospeso dalla scrittura fino al ${formatFullDate(
@@ -92,55 +93,31 @@ export async function proposeMovieAction(
   const movieId = Number(formData.get("movie_id"));
   if (!Number.isInteger(movieId) || movieId <= 0) return { error: "Film non valido." };
 
-  const film = await dbGet<{ title: string; year: number | null }>(
-    `SELECT title, year FROM movies WHERE id = @id`,
-    { id: movieId },
-  );
+  const film = await dbGet(`SELECT id FROM movies WHERE id = @id`, { id: movieId });
   if (!film) return { error: "Film non trovato." };
 
-  const doppione = await dbGet<{ id: number; status: string }>(
-    `SELECT id, status FROM movie_requests
-      WHERE LOWER(title) = LOWER(@title) AND status IN ('in_attesa','approvata')`,
-    { title: film.title },
+  const gia = await dbGet(
+    `SELECT 1 FROM movie_interests WHERE movie_id = @movieId AND user_id = @userId`,
+    { movieId, userId: user.id },
   );
 
-  if (doppione) {
-    const giaMia = await dbGet(
-      `SELECT 1 FROM request_votes WHERE request_id = @id AND user_id = @userId`,
-      { id: doppione.id, userId: user.id },
-    );
-    if (giaMia) {
-      return { ok: "Hai già proposto questo film: la direzione lo sta valutando." };
-    }
+  if (gia) {
     await dbRun(
-      `INSERT OR IGNORE INTO request_votes (request_id, user_id) VALUES (@id, @userId)`,
-      { id: doppione.id, userId: user.id },
+      `DELETE FROM movie_interests WHERE movie_id = @movieId AND user_id = @userId`,
+      { movieId, userId: user.id },
     );
-    revalidatePath("/richieste");
-    revalidatePath("/admin/richieste");
-    return {
-      ok: "Qualcuno l'aveva già proposto: abbiamo segnalato anche il tuo interesse.",
-    };
+    revalidatePath(`/film/${movieId}`);
+    revalidatePath("/admin/interessi");
+    return { ok: "Interesse ritirato." };
   }
 
-  const { lastInsertRowid } = await dbRun(
-    `INSERT INTO movie_requests (user_id, title, year, note)
-     VALUES (@userId, @title, @year, @note)`,
-    {
-      userId: user.id,
-      title: film.title,
-      year: film.year,
-      note: "Proposto dalla scheda del film.",
-    },
-  );
   await dbRun(
-    `INSERT OR IGNORE INTO request_votes (request_id, user_id) VALUES (@id, @userId)`,
-    { id: lastInsertRowid, userId: user.id },
+    `INSERT OR IGNORE INTO movie_interests (movie_id, user_id) VALUES (@movieId, @userId)`,
+    { movieId, userId: user.id },
   );
-
-  revalidatePath("/richieste");
-  revalidatePath("/admin/richieste");
-  return { ok: "Proposta inviata: la direzione la valuterà a breve." };
+  revalidatePath(`/film/${movieId}`);
+  revalidatePath("/admin/interessi");
+  return { ok: "Interesse registrato." };
 }
 
 export async function deleteOwnRequestAction(formData: FormData) {

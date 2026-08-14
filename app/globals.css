@@ -595,34 +595,31 @@ option {
   color: var(--testo-tenue);
 }
 
-/* Gli avvisi di esito compaiono, restano dieci secondi e svaniscono: la
-   dissolvenza finale coincide con il momento in cui React li rimuove. */
+/* Gli avvisi di esito restano qualche secondo e poi svaniscono. La classe
+   "in-uscita" viene messa dal componente poco prima della rimozione: il
+   passaggio avviene su un elemento già in pagina, quindi la dissolvenza si
+   vede sempre, anche se nel frattempo il server ha rigenerato la pagina. */
 .avviso-temporaneo {
-  animation: avviso-vita 10s ease forwards;
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
 }
 
-@keyframes avviso-vita {
-  0% {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  2% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  93% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
+.avviso-temporaneo.in-uscita {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 
+/* Chi ha chiesto meno animazioni non vuole elementi che si spostano, ma la
+   dissolvenza va comunque mostrata: senza, l'avviso sparirebbe di scatto.
+   Serve !important per superare la regola generale che azzera le durate. */
 @media (prefers-reduced-motion: reduce) {
   .avviso-temporaneo {
-    animation: none;
+    transition: opacity 700ms ease !important;
+  }
+
+  .avviso-temporaneo.in-uscita {
+    transform: none;
   }
 }
 
@@ -1108,6 +1105,30 @@ option {
   margin-top: 4px;
 }
 
+/* Orari della giornata mostrati dentro il carosello. */
+.hero-orari {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero-orari-chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--bordo-forte);
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--oro-chiaro);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(4px);
+}
+
 .hero-punti {
   position: absolute;
   right: clamp(14px, 3vw, 30px);
@@ -1193,6 +1214,92 @@ option {
   font-size: 1.08rem;
   color: var(--crema);
   margin-bottom: 6px;
+}
+
+.proponi-conteggio {
+  font-size: 0.92rem;
+  color: var(--testo-tenue);
+  margin-bottom: 10px;
+}
+
+/* ------------------------------------------ classifica film richiesti */
+.interesse-riga {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.interesse-posizione {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--bordo-forte);
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--oro);
+  font-family: var(--serif);
+  font-size: 1rem;
+}
+
+.interesse-locandina {
+  position: relative;
+  flex: 0 0 auto;
+  width: 54px;
+  aspect-ratio: 2 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--bordo);
+  background: var(--nero-2);
+}
+
+.interesse-locandina img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.interesse-locandina .locandina-disegnata::before,
+.interesse-locandina .lp-alto,
+.interesse-locandina .lp-basso,
+.interesse-locandina .lp-sigillo {
+  display: none;
+}
+
+.interesse-locandina .lp-titolo {
+  font-size: 0.55rem;
+  -webkit-line-clamp: 3;
+}
+
+.interesse-azioni {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.interesse-conteggio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.interesse-conteggio b {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  color: var(--oro);
+}
+
+@media (max-width: 620px) {
+  .interesse-riga {
+    flex-wrap: wrap;
+  }
+  .interesse-azioni {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* ------------------------------------------- riquadro riservato admin */

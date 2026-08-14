@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieRow } from "@/components/MovieRow";
-import { NextScreening } from "@/components/NextScreening";
 import { PollCard } from "@/components/PollCard";
+import { PollShowcase } from "@/components/PollShowcase";
 import { Stars } from "@/components/Stars";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -14,6 +14,7 @@ import {
   moviesByIds,
   nextScreeningDay,
   siteStats,
+  upcomingDatesForMovies,
 } from "@/lib/queries";
 
 export default async function HomePage() {
@@ -43,9 +44,32 @@ export default async function HomePage() {
     nextScreeningDay(),
   ]);
 
-  // Il carosello in cima mostra i film in votazione nel sondaggio qui sotto.
-  // Se non c'è nessun sondaggio aperto si ripiega sui film messi in evidenza
-  // dalla direzione, e in mancanza di quelli su ciò che è in sala.
+  // In cima il carosello dei film effettivamente in cartellone nella prima
+  // giornata utile, con i loro orari. Senza programmazione si ripiega sui film
+  // in evidenza, e in mancanza di quelli su ciò che risulta in sala.
+  const filmGiornata = giornata
+    ? await moviesByIds([...new Set(giornata.spettacoli.map((s) => s.movie_id))])
+    : [];
+
+  const orariPerFilm: Record<number, string[]> = {};
+  for (const s of giornata?.spettacoli ?? []) {
+    (orariPerFilm[s.movie_id] ??= []).push(s.starts_at);
+  }
+
+  const altreProiezioni = giornata
+    ? await upcomingDatesForMovies(
+        filmGiornata.map((f) => f.id),
+        giornata.giorno,
+      )
+    : {};
+
+  const filmHero = filmGiornata.length
+    ? filmGiornata
+    : featured.length
+      ? featured
+      : inSala.slice(0, 5);
+
+  // Sotto, la vetrina dei candidati del sondaggio aperto più recente.
   const sondaggio = polls[0] ?? null;
   const filmSondaggio = sondaggio
     ? await moviesByIds(
@@ -55,22 +79,18 @@ export default async function HomePage() {
       )
     : [];
 
-  const filmHero = filmSondaggio.length
-    ? filmSondaggio
-    : featured.length
-      ? featured
-      : inSala.slice(0, 5);
-
   return (
     <div className="contenitore pagina">
-      {giornata && (
-        <NextScreening giorno={giornata.giorno} spettacoli={giornata.spettacoli} />
-      )}
-
       <HeroCarousel
         movies={filmHero}
-        etichetta={filmSondaggio.length ? "In votazione per la rassegna" : undefined}
+        etichetta={filmGiornata.length ? "Oggi in sala" : undefined}
+        orariPerFilm={orariPerFilm}
+        altreProiezioni={altreProiezioni}
       />
+
+      {sondaggio && filmSondaggio.length > 0 && (
+        <PollShowcase sondaggio={sondaggio} film={filmSondaggio} />
+      )}
 
       <div className="due-colonne sezione">
         <div>

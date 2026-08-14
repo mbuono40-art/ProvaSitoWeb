@@ -17,6 +17,7 @@ import {
 import {
   getMovie,
   listByGenre,
+  movieInterest,
   myReview,
   pastShowtimesForMovie,
   reviewsForMovie,
@@ -55,13 +56,15 @@ export default async function FilmPage({
 
   const genere = movie.genres.split(",")[0]?.trim() || "";
 
-  const [prossimi, passati, recensioni, mia, similiConSelf] = await Promise.all([
-    showtimesForMovie(movie.id),
-    pastShowtimesForMovie(movie.id, 8),
-    reviewsForMovie(movie.id),
-    user ? myReview(movie.id, user.id) : Promise.resolve(null),
-    genere ? listByGenre(genere, 14) : Promise.resolve([]),
-  ]);
+  const [prossimi, passati, recensioni, mia, similiConSelf, interesse] =
+    await Promise.all([
+      showtimesForMovie(movie.id),
+      pastShowtimesForMovie(movie.id, 8),
+      reviewsForMovie(movie.id),
+      user ? myReview(movie.id, user.id) : Promise.resolve(null),
+      genere ? listByGenre(genere, 14) : Promise.resolve([]),
+      movieInterest(movie.id, user?.id),
+    ]);
   const simili = similiConSelf.filter((m) => m.id !== movie.id);
 
   return (
@@ -182,6 +185,8 @@ export default async function FilmPage({
                 movieId={movie.id}
                 movieTitle={movie.title}
                 isLogged={!!user}
+                interessato={interesse.mio}
+                interessati={interesse.totale}
               />
             )}
           </section>

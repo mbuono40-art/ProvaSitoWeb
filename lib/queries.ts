@@ -191,6 +191,37 @@ export async function showtimesForMovie(movieId: number): Promise<ShowtimeWithMo
   );
 }
 
+/**
+ * Per ogni film indicato, le altre giornate in cui torna in sala dopo quella
+ * mostrata. Serve al carosello per dire "torna in sala anche il…".
+ */
+export async function upcomingDatesForMovies(
+  ids: number[],
+  dopoGiorno: string,
+): Promise<Record<number, string[]>> {
+  if (!ids.length) return {};
+
+  const segnaposto = ids.map((_, i) => `@id${i}`).join(", ");
+  const args: Record<string, unknown> = { dopo: `${dopoGiorno}T23:59` };
+  ids.forEach((id, i) => {
+    args[`id${i}`] = id;
+  });
+
+  const righe = await dbAll<{ movie_id: number; giorno: string }>(
+    `SELECT DISTINCT movie_id, substr(starts_at, 1, 10) AS giorno
+       FROM showtimes
+      WHERE movie_id IN (${segnaposto}) AND starts_at > @dopo
+      ORDER BY giorno`,
+    args as Args,
+  );
+
+  const perFilm: Record<number, string[]> = {};
+  for (const r of righe) {
+    (perFilm[r.movie_id] ??= []).push(`${r.giorno}T00:00`);
+  }
+  return perFilm;
+}
+
 export async function pastShowtimesForMovie(
   movieId: number,
   limit = 10,
@@ -426,6 +457,56 @@ export async function moviesByIds(ids: number[]): Promise<MovieWithStats[]> {
 
   const perId = new Map(trovati.map((m) => [m.id, m]));
   return ids.map((id) => perId.get(id)).filter((m): m is MovieWithStats => !!m);
+}
+
+/* ------------------------------------------------ interesse sui film */
+
+/** Quante persone hanno segnalato interesse, e se fra queste c'è l'utente. */
+export async function movieInterest(
+  movieId: number,
+  userId?: number | null,
+): Promise<{ totale: number; mio: boolean }> {
+  const [conteggio, mio] = await Promise.all([
+    dbGet<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM movie_interests WHERE movie_id = @movieId`,
+      { movieId },
+    ),
+    userId
+      ? dbGet(
+          `SELECT 1 FROM movie_interests WHERE movie_id = @movieId AND user_id = @userId`,
+          { movieId, userId },
+        )
+      : Promise.resolve(undefined),
+  ]);
+  return { totale: conteggio?.n ?? 0, mio: !!mio };
+}
+
+export interface InterestRow {
+  movie_id: number;
+  title: string;
+  year: number | null;
+  status: string;
+  poster_url: string | null;
+  genres: string;
+  interessati: number;
+  ultimo: string;
+  in_programmazione: number;
+}
+
+/** Classifica dei film di catalogo che il pubblico vorrebbe rivedere. */
+export async function listInterests(): Promise<InterestRow[]> {
+  return dbAll<InterestRow>(
+    `SELECT m.id AS movie_id, m.title, m.year, m.status, m.poster_url, m.genres,
+            COUNT(i.user_id) AS interessati,
+            MAX(i.created_at) AS ultimo,
+            (SELECT COUNT(*) FROM showtimes s
+              WHERE s.movie_id = m.id AND s.starts_at >= @now) AS in_programmazione
+       FROM movie_interests i
+       JOIN movies m ON m.id = i.movie_id
+      GROUP BY m.id
+      ORDER BY interessati DESC, ultimo DESC`,
+    { now: nowKey() },
+  );
 }
 
 /* -------------------------------------------------------------- utenti (admin) */

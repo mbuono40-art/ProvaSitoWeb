@@ -10,6 +10,7 @@ const VOCI = [
   { href: "/admin/spettacoli", label: "Programmazione" },
   { href: "/admin/sondaggi", label: "Sondaggi" },
   { href: "/admin/richieste", label: "Richieste" },
+  { href: "/admin/interessi", label: "Film richiesti" },
   { href: "/admin/recensioni", label: "Recensioni" },
   { href: "/admin/utenti", label: "Utenti" },
 ];

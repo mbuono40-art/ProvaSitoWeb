@@ -126,6 +126,17 @@ async function runMigration(db: Client): Promise<void> {
       PRIMARY KEY (request_id, user_id)
     );
 
+    /* Interesse dichiarato su un film già in catalogo, dalla sua scheda.
+       Diverso da movie_requests, che raccoglie proposte scritte a mano su
+       titoli che il cinema non ha. La chiave doppia impedisce i doppioni. */
+    CREATE TABLE IF NOT EXISTS movie_interests (
+      movie_id   INTEGER NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (movie_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_interests_movie ON movie_interests(movie_id);
+
     CREATE TABLE IF NOT EXISTS polls (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
       title       TEXT NOT NULL,
