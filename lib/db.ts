@@ -42,7 +42,22 @@ function client(): Client {
 }
 
 async function runMigration(db: Client): Promise<void> {
-  await db.execute("PRAGMA foreign_keys = ON");
+  try {
+    await db.execute("PRAGMA foreign_keys = ON");
+  } catch (e) {
+    // Con un database remoto la causa più frequente è il token scaduto o
+    // sbagliato. Senza questo messaggio nei log resta solo un generico 500.
+    if (process.env.TURSO_DATABASE_URL) {
+      console.error(
+        "\n[cinema] Impossibile parlare con il database remoto." +
+          "\n[cinema] Causa più probabile: TURSO_AUTH_TOKEN scaduto o errato." +
+          "\n[cinema] Genera un token nuovo (senza scadenza) su turso.tech e" +
+          "\n[cinema] aggiornalo sia in .env.local sia fra le variabili di Vercel." +
+          `\n[cinema] Dettaglio: ${e instanceof Error ? e.message : String(e)}\n`,
+      );
+    }
+    throw e;
+  }
 
   await db.executeMultiple(`
     CREATE TABLE IF NOT EXISTS users (

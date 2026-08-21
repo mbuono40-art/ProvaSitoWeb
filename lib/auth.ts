@@ -56,8 +56,13 @@ export async function clearSession() {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  await bootstrap();
+  // I cookie si leggono per primi di proposito: la lettura segnala a Next che
+  // la pagina va resa a ogni richiesta, quindi in fase di build il database
+  // non viene mai interrogato. Senza questo ordine, un database irraggiungibile
+  // farebbe fallire la compilazione e non si potrebbe nemmeno pubblicare la
+  // correzione.
   const jar = await cookies();
+  await bootstrap();
   const token = jar.get(COOKIE)?.value;
   if (!token) return null;
   const row = await dbGet<User>(
